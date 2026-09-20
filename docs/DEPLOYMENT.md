@@ -8,7 +8,7 @@ Deployment is automated via GitHub Actions on every push to `main`.
 | | |
 |---|---|
 | Domain | `jakeschmitz.com` |
-| Hosting | DigitalOcean droplet, served from `/var/www/jakeschmitz/` |
+| Hosting | DigitalOcean droplet, served from `/var/www/jakeschmitz.com/html/` |
 | CI/CD | GitHub Actions ([deploy.yml](../.github/workflows/deploy.yml)) |
 | Trigger | Push to `main` |
 | Transport | `rsync` over SSH |
@@ -20,7 +20,7 @@ Defined in [.github/workflows/deploy.yml](../.github/workflows/deploy.yml), the 
 1. **`deploy`**
    - Checks out the repo.
    - Replaces the `__CACHEBUST__` placeholder in `index.html` with the first 8 characters of the commit SHA, so browsers/CDNs fetch fresh assets after each release.
-   - Syncs the repo root to `/var/www/jakeschmitz/` on the droplet via `rsync -avz --delete`, using `burnett01/rsync-deployments`. `--delete` means files removed from the repo are also removed from the server — there is no separate "untracked file" cleanup step.
+   - Syncs the repo root to `/var/www/jakeschmitz.com/html/` on the droplet via `rsync -avz --delete`, using `burnett01/rsync-deployments`. `--delete` means files removed from the repo are also removed from the server — there is no separate "untracked file" cleanup step.
 2. **`lighthouse`** (runs after `deploy`, `continue-on-error: true`)
    - Runs Lighthouse CI against `https://jakeschmitz.com/` and uploads the report to temporary public storage.
    - Failures here do not block or roll back the deploy; treat it as a post-deploy signal to check, not a gate.
@@ -31,9 +31,9 @@ Configured under the repo's GitHub Actions secrets:
 
 - `DROPLET_HOST`
 - `DROPLET_USER`
-- `DROPLET_SSH_KEY`
+- `DEPLOY_SSH_KEY`
 
-These must grant the workflow SSH/rsync write access to `/var/www/jakeschmitz/` on the target droplet.
+These must grant the workflow SSH/rsync write access to `/var/www/jakeschmitz.com/html/` on the target droplet.
 
 ## Executing a deployment
 
@@ -51,7 +51,7 @@ No local build step is required — the repo is deployed as-is (aside from the c
 There is no automated rollback. To roll back:
 
 1. Revert or push a fix commit to `main` (preferred — keeps history linear and re-triggers the pipeline).
-2. If urgent and Actions is unavailable, `rsync` the last known-good commit's contents to `/var/www/jakeschmitz/` directly over SSH using the same credentials as the workflow.
+2. If urgent and Actions is unavailable, `rsync` the last known-good commit's contents to `/var/www/jakeschmitz.com/html/` directly over SSH using the same credentials as the workflow.
 
 ## Verifying a deployment
 
