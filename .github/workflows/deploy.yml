@@ -11,6 +11,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Inject cache-busting version
+        run: |
+          sed -i "s/__CACHEBUST__/${GITHUB_SHA::8}/g" index.html
+
       - name: Deploy via rsync
         uses: burnett01/rsync-deployments@7.0.1
         with:
@@ -20,3 +24,16 @@ jobs:
           remote_host: ${{ secrets.DROPLET_HOST }}
           remote_user: ${{ secrets.DROPLET_USER }}
           remote_key: ${{ secrets.DROPLET_SSH_KEY }}
+
+  lighthouse:
+    needs: deploy
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            https://jakeschmitz.com/
+          uploadArtifacts: true
+          temporaryPublicStorage: true
